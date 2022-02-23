@@ -46,7 +46,9 @@ var data =
 
 $(document).ready(function() 
 {
-    
+    var idCodice = 10005;
+    var idModifica;
+
     disegnaRighe();
 
     function disegnaRighe()
@@ -56,13 +58,13 @@ $(document).ready(function()
         for(var i = 0; i < data.length; i++)
         {
             riga += "<tr> <th scope='row'>" + data[i].id + "</th> " + " <td>" + data[i].firstName + "</td> " +
-            " <td>" + data[i].lastName + "</td> " + " <td data-id = " + data[i].id + ">" + "<button type='button' class='btn btn-danger btn-sm px-3 elimina'> Elimina </button> </td> </tr>";
+            " <td>" + data[i].lastName + "</td> " + " <td data-id = " + data[i].id + ">" + " <button type='button' class='btn btn-danger btn-sm px-3 elimina'> Elimina </button> <button type='button' class='btn btn-warning btn-sm px-3 modifica'> Modifica </button></td> </tr>";
         }
 
         $("tbody").html(riga);
     };
 
-    $('.elimina').bind('click', function (e)
+    $("body").on('click', '.elimina', function (e)
     {
         var idElimina = $(this).parent("td").data("id");
         
@@ -74,7 +76,58 @@ $(document).ready(function()
               break;
             }
         }
-        alert("Ho Eliminato La Riga");
         disegnaRighe();
     });
+
+    $(".aggiungi").click(function (e)
+    {
+        var nome = $("#recipient-name").val();
+        var cognome = $("#recipient-lastname").val();
+
+        idCodice += 1; 
+
+        data.push
+        ({
+          "id": idCodice,
+          "firstName": nome,
+          "lastName": cognome,
+        });
+
+        $("#exampleModal").modal('hide');
+
+        disegnaRighe();
+    });
+
+    $("body").on('click', '.modifica', function (e)
+    {
+      $("#exampleModal").modal('show');
+
+       idModifica = $(this).parent("td").data("id");
+
+       $(".aggiungi").addClass("aggiungiModifica");
+       $(".aggiungiModifica").removeClass("aggiungi");
+
+    });
+
+    $(".aggiungiModifica").click(function (e)
+    {
+        var nome = $("#recipient-name").val();
+        var cognome = $("#recipient-lastname").val();
+
+        for(var i = 0; i < data.length; i++)
+          {
+            if(data[i].id == idModifica)
+            {
+              data[i].firstName = nome;
+              data[i].lastName = cognome;
+
+              break;
+            }
+          }
+          $(".aggiungiModifica").addClass("aggiungi");
+          $(".aggiungi").removeClass("aggiungiModifica");
+          
+          disegnaRighe();
+    });
+
 });
