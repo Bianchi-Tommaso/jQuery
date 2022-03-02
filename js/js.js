@@ -58,7 +58,7 @@ $(document).ready(function()
         for(var i = 0; i < data.length; i++)
         {
             riga += "<tr> <th scope='row'>" + data[i].id + "</th> " + " <td>" + data[i].firstName + "</td> " +
-            " <td>" + data[i].lastName + "</td> " + " <td data-id = " + data[i].id + ">" + " <button type='button' class='btn btn-danger btn-sm px-3 elimina'> Elimina </button> <button type='button' class='btn btn-warning btn-sm px-3 modifica'> Modifica </button></td> </tr>";
+            " <td>" + data[i].lastName + "</td> " + " <td data-id = " + data[i].id + ">" + " <button type='button' class='btn btn-danger btn-sm px-3 elimina'> Elimina </button> <button type='button' class='btn btn-warning btn-sm px-3 apri'> Modifica </button></td> </tr>";
         }
 
         $("tbody").html(riga);
@@ -98,36 +98,43 @@ $(document).ready(function()
         disegnaRighe();
     });
 
+    $("body").on('click', '.apri', function (e)
+    {
+      $("#modalModifica").modal('show');
+      idModifica = $(this).parent("td").data("id");
+    });
+
     $("body").on('click', '.modifica', function (e)
     {
-      $("#exampleModal").modal('show');
+        var nome = $("#name").val();
+        var cognome = $("#lastname").val();
+        
+        $("#name").val("");
+        $("#lastname").val("");
 
-       idModifica = $(this).parent("td").data("id");
-
-       $(".aggiungi").addClass("aggiungiModifica");
-       $(".aggiungiModifica").removeClass("aggiungi");
-
-    });
-
-    $(".aggiungiModifica").click(function (e)
-    {
-        var nome = $("#recipient-name").val();
-        var cognome = $("#recipient-lastname").val();
+        console.log(nome);
+       console.log(cognome);
+        
 
         for(var i = 0; i < data.length; i++)
+        {
+          if(idModifica == data[i].id)
           {
-            if(data[i].id == idModifica)
-            {
-              data[i].firstName = nome;
-              data[i].lastName = cognome;
+            data[i].lastName = cognome;
+            data[i].firstName = nome;
 
-              break;
-            }
+            console.log(idModifica);
+            console.log(data.id);
+
+            disegnaRighe();
+
+            break;
           }
-          $(".aggiungiModifica").addClass("aggiungi");
-          $(".aggiungi").removeClass("aggiungiModifica");
-          
-          disegnaRighe();
+        }
+
+        $("#modalModifica").modal('hide');
+
     });
+
 
 });
