@@ -1,119 +1,163 @@
-/* var data = 
-[
-    {
-        "id": 10001,
-        "birthDate": "1953-09-01",
-        "firstName": "Georgi",
-        "lastName": "Facello",
-        "gender": "M",
-        "hireDate": "1986-06-25",
-      },
-      {
-        "id": 10002,
-        "birthDate": "1964-06-01",
-        "firstName": "Bezalel",
-        "lastName": "Simmel",
-        "gender": "F",
-        "hireDate": "1985-11-20",
-      },
-      {
-        "id": 10003,
-        "birthDate": "1959-12-02",
-        "firstName": "Parto",
-        "lastName": "Bamford",
-        "gender": "M",
-        "hireDate": "1986-08-27T22:00:00.000+0000",
-      },
-      {
-        "id": 10004,
-        "birthDate": "1954-04-30",
-        "firstName": "Chirstian",
-        "lastName": "Koblick",
-        "gender": "M",
-        "hireDate": "1986-11-30",
-    
-      },
-      {
-        "id": 10005,
-        "birthDate": "1955-01-20",
-        "firstName": "Kyoichi",
-        "lastName": "Maliniak",
-        "gender": "M",
-        "hireDate": "1989-09-11T22:00:00.000+0000",
-    
-      }
-];
+var index = "http://localhost:8080/employees";
+var self, next, last, prev, page, json, totalPages, idModifica;
 
-*/
-var pagina = 0;
 $(document).ready(function() 
 {
-    $.get("http://localhost:8080/employees", function(data)
-    {
-          disegnaRighe(data['_embedded']['employees']);
-    });
 
-    $("body").on('click', '.prossimaPagina', function (e)
-    {
-      var link = "http://localhost:8080/employees?";
+  $("body").ready(function () 
+  {
+    prendiDati(index);
+  });
 
-      pagina++;
-
-      link += "page=" + pagina + "&size=20";
-      
+  function prendiDati(link)   //prende i dati e stampa i dipendeti
+  {
       $.get(link, function(data)
+      {
+          self = data['_links']['self']['href'];      //Link self
+          last = data['_links']['last']['href'];      //Link last
+          page = data['page']['number'];              //pagina
+          totalPages = data['page']['totalPages'];    //pagine totali  
+          json = data;                                //savo data in una variabile
+
+          if(page != totalPages - 1)           //controllo se c'è un link next
+          {
+            next = data['_links']['next']['href'];
+          }
+
+          if(page != 0)                       //controllo se c'è un link prev
+          {
+            prev = data['_links']['prev']['href'];
+          }
+
+          $("p").html(page + 1);            //stampo il numero della pagina
+
+            disegnaRighe(data['_embedded']['employees']);   //stampo la tabella
+      });
+  }
+
+    $("body").on('click', '.prossimaPagina', function (e)   //evento per andare nella pagina successiva
     {
-          disegnaRighe(data['_embedded']['employees']);
-    }); 
+          $.get(next, function(data)
+          {
+              prendiDati(next);
+          }); 
     });
 
-    $("body").on('click', '.precedentePagina', function (e)
+    $("body").on('click', '.precedentePagina', function (e) //evento per andare nella pagina precedente 
     {
-      var link = "http://localhost:8080/employees?";
-
-      if(pagina > 0)
-        pagina--;
-
-      link += "page=" + pagina + "&size=20";
-      
-      $.get(link, function(data)
-    {
-          disegnaRighe(data['_embedded']['employees']);
-    }); 
+          if(page != 0)
+            $.get(prev, function(data)
+            {
+              prendiDati(prev);
+            }); 
     });
 
-    $("body").on('click', '.ultimaPagina', function (e)
-    {
-      var link = "http://localhost:8080/employees?";
-
-      pagina = 15001;
-
-      link += "page=" + pagina + "&size=20";
-      
-      $.get(link, function(data)
-    {
-          disegnaRighe(data['_embedded']['employees']);
-    }); 
+    $("body").on('click', '.ultimaPagina', function (e)   ////evento per andare all'ultima pagina
+    { 
+          $.get(last, function(data)
+          {
+            prendiDati(last);
+          }); 
     });
 
-    $("body").on('click', '.primaPagina', function (e)
-    {
-      var link = "http://localhost:8080/employees?";
-
-      pagina = 0;
-
-      link += "page=" + pagina + "&size=20";
-      
-      $.get(link, function(data)
-    {
-          disegnaRighe(data['_embedded']['employees']);
-    }); 
+    $("body").on('click', '.primaPagina', function (e)    ////evento per andare alla prima pagina
+    {      
+          $.get(index, function(data)
+          {
+            prendiDati(index);
+          }); 
     });
 
+    $("body").on('click', '.elimina', function (e)
+    {
+        var idElimina = $(this).parent("td").data("id");
+        
+        deleteDati(idElimina);
+    });
 
-    var idModifica;
+    $(".aggiungi").click(function (e)
+    {
+        var nome = $("#recipient-name").val();
+        var cognome = $("#recipient-lastname").val();
+        
+        var dipendente =              //Oggetto JS
+        {
+          "birthDate": "1952-12-24",
+          "firstName": nome,
+          "lastName": cognome,
+          "gender": "M",
+          "hireDate": "1991-01-26",
+        };
 
-    function disegnaRighe(data)
+        $("#exampleModal").modal('hide');
+
+        postDati(dipendente);
+    });
+
+    $("body").on('click', '.apri', function (e) 
+    {
+      $("#modalModifica").modal('show');
+      idModifica = $(this).parent("td").data("id");
+    });
+
+    $("body").on('click', '.modifica', function (e)
+    {
+        var nome = $("#name").val();
+        var cognome = $("#lastname").val();
+
+        var dipendente =      //Oggetto JS
+        {
+          "id": idModifica,
+          "birthDate": "1952-12-24",
+          "firstName": nome,
+          "lastName": cognome,
+          "gender": "M",
+          "hireDate": "1991-01-26",
+        };
+
+        putDati(dipendente)
+
+        $("#modalModifica").modal('hide');
+
+    });
+
+    function putDati(dipendente)          //Metodo per aggiornare i dati
+    {
+      $.ajax({
+        type: "PUT",
+        url: index + "/" + idModifica,
+        data: JSON.stringify(dipendente),
+        contentType: "application/json",
+        dataType: "json",
+        success: function(data){prendiDati(index + "?page=" + page + "&size=20")},
+        error: function(data){console.log("errore");}
+      });
+    }
+
+    function postDati(dipendente)               //Metodo per aggiungere i dipendenti
+    {
+      $.ajax({
+        type: "POST",
+        url: index,
+        data: JSON.stringify(dipendente),
+        contentType: "application/json",
+        dataType: "json",
+        success: function(data){prendiDati(json['_links']['last']['href'])},
+        error: function(data){console.log("errore");}
+      });
+    };
+
+    function deleteDati(idElimina) //Metodo per eliminare i dipendenti
+    {
+      $.ajax({
+        type: "DELETE",
+        url: index + "/" + idElimina,
+        success: function(data){prendiDati(index + "?page=" + page + "&size=20")},
+        error: function(data){console.log("errore");}
+      });
+    }
+
+    function disegnaRighe(data)     //Metodo per stampare i dati
     {
         var riga = "";
         
@@ -125,78 +169,4 @@ $(document).ready(function()
 
         $("tbody").html(riga);
     };
-
-    $("body").on('click', '.elimina', function (e)
-    {
-        var idElimina = $(this).parent("td").data("id");
-        
-        for(var i = 0; i < data.length; i++)
-        {
-            if(data[i].id == idElimina)
-            {
-              data.splice(i,1);
-              break;
-            }
-        }
-        disegnaRighe();
-    });
-
-    $(".aggiungi").click(function (e)
-    {
-        var nome = $("#recipient-name").val();
-        var cognome = $("#recipient-lastname").val();
-
-        idCodice += 1; 
-
-        data.push
-        ({
-          "id": idCodice,
-          "firstName": nome,
-          "lastName": cognome,
-        });
-
-        $("#exampleModal").modal('hide');
-
-        disegnaRighe();
-    });
-
-    $("body").on('click', '.apri', function (e)
-    {
-      $("#modalModifica").modal('show');
-      idModifica = $(this).parent("td").data("id");
-    });
-
-    $("body").on('click', '.modifica', function (e)
-    {
-        var nome = $("#name").val();
-        var cognome = $("#lastname").val();
-        
-        $("#name").val("");
-        $("#lastname").val("");
-
-        console.log(nome);
-       console.log(cognome);
-        
-
-        for(var i = 0; i < data.length; i++)
-        {
-          if(idModifica == data[i].id)
-          {
-            data[i].lastName = cognome;
-            data[i].firstName = nome;
-
-            console.log(idModifica);
-            console.log(data.id);
-
-            disegnaRighe();
-
-            break;
-          }
-        }
-
-        $("#modalModifica").modal('hide');
-
-    });
-
-
 });

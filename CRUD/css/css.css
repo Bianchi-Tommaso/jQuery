@@ -7,3 +7,8 @@
 {  margin: auto;
     margin-left: 35%;
 }
+
+p
+{
+    display: inline;
+}
